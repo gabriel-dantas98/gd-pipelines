@@ -1,0 +1,16 @@
+stages:
+    - install_dependencies
+    - run_tests
+
+image: gabsdevops/minimal-python3
+
+install_dependencies:
+    stage: install_dependencies
+    script:
+        - pip install -r requirements.txt
+        
+run_tests:
+    stage: run_tests
+    script:
+        -  cd tests && pytest -v
+

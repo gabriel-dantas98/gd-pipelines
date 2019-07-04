@@ -1,0 +1,52 @@
+image: gabsdevops/docker-cicd
+services:
+  - docker:dind
+
+stages:
+  - unit_test
+  - build
+  - release
+  - deploy
+
+variables: 
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  GITLAB_REGISTER: $GITLAB_REGISTER 
+  ECR_REGISTER: $ECR_REGISTER
+  DOCKER_HUB_REGISTER: $DOCKER_HUB_REGISTER
+  COMMIT_ID: ${CI_COMMIT_SHA:0:8}
+
+before_script:
+  - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+  - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+  - export AWS_DEFAULT_REGION=us-east-1
+  #- echo "$REGISTER_PASSWORD" | docker login registry.gitlab.com -u "$REGISTER_USER" --password-stdin
+  - $(aws ecr get-login --no-include-email --region us-east-1)
+
+unit_test:
+  stage: unit_test
+  script:
+    - pip install -r requirements.txt
+    - pytest tests
+
+build:
+  stage: build
+  script:
+    - docker build --pull -t $ECR_REGISTER:$COMMIT_ID .
+    - docker push $ECR_REGISTER:$COMMIT_ID
+
+release-image:
+  stage: release
+  script:
+    - docker pull $ECR_REGISTER:$COMMIT_ID
+    - docker tag $ECR_REGISTER:$COMMIT_ID $ECR_REGISTER:latest
+    - docker push $ECR_REGISTER:latest
+  only:
+    - master
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Executando processo de deploy da nova versão ${COMMIT_ID}"
+  only:
+    - master
