@@ -21,7 +21,7 @@ properties([
                     sandbox: false,   
                     script:   
                         '''   
-                          def aws_rds = ("aws rds describe-db-instances --region us-east-1 --query DBInstances[?DBInstancesStatus=="available"].DBInstanceIdentifier --output text").execute().text.split()  
+                          def aws_rds = ('aws rds describe-db-instances --region us-east-1 --query DBInstances[?DBInstancesStatus=="available"].DBInstanceIdentifier --output text').execute().text.split()  
                           def databases = aws_rds.collect { it } 
                           return databases                         
                         '''  
@@ -49,7 +49,7 @@ properties([
                     sandbox: false,   
                     script:   
                         '''                          
-                          def inline_list_rds = ("aws rds describe-db-instances --region us-east-1 --query DBInstances[?DBInstancesStatus=="available"].DBInstanceIdentifier --output text").execute().text.split()  
+                          def inline_list_rds = ('aws rds describe-db-instances --region us-east-1 --query DBInstances[?DBInstancesStatus=="available"].DBInstanceIdentifier --output text').execute().text.split()  
                           def list_rds_splited = inline_list_rds.collect { it } 
                           return list_rds_splited
                         '''  
