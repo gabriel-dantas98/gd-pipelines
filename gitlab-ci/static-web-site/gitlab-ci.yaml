@@ -1,0 +1,43 @@
+image: node:8-jessie
+
+before_script:
+  - npm install
+
+cache:
+  paths:
+    - node_modules/
+    - build/
+
+stages:
+  - install_dependencies
+  - build
+  - deploy
+
+install_dependencies:
+  type: install_dependencies
+  script:
+    - npm install
+
+build:
+  dependencies:
+    - install_dependencies
+  type: build
+  script:
+    - npm run build
+    - du -sh build
+
+deploy:
+  type: deploy
+  dependencies:
+    - install_dependencies
+    - build
+  script:
+    - export SURGE_LOGIN=${SURGE_EMAIL}
+    - export SURGE_TOKEN=${SURGE_PASS_KEY}
+    - echo "Executing Surge Deploy!"
+    # Update netrc file to auth heroku
+    - /root/update_netrc.sh $SURGE_PASS_KEY $SURGE_EMAIL
+    # Heroku Surge.sh commands
+    - surge -p dist/ --domain gd-vue-admin.surge.sh
+    # Healthcheck script expected code - 200
+    - /root/healthcheck.sh http://gd-vue-admin.surge.sh
