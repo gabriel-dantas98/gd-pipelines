@@ -1,0 +1,85 @@
+name: checklist-as-code/validator
+
+on:
+  repository_dispatch:
+    types: [org-workflow-bot]
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: SvanBoxel/organization-workflow@main
+      with:
+        id: ${{ github.event.client_payload.id }}
+        callback_url: ${{ github.event.client_payload.callback_url }}
+        sha: ${{ github.event.client_payload.sha }}
+        run_id: ${{ github.run_id }}
+        name: ${{ github.workflow }} # Default: name of workflow. This name is shown with the check, but can be changed.
+
+  main:
+    needs: [register]
+    runs-on: self-hosted
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.3.4
+      with:
+        repository: ${{ github.event.client_payload.repository.full_name }}
+        ref: ${{ github.event.client_payload.sha }}
+        token: ${{ github.event.client_payload.token }}
+
+    - name: sample
+      run: |
+            ls
+    - name: Find pull request
+      uses: gabriel-dantas98/find-pull-request-action@v1.6
+      id: findPr
+      with:
+        github-token: ${{ secrets.GIT_TOKEN }}
+        sha: ${{ github.event.client_payload.sha }}
+        repository: ${{ github.event.client_payload.repository.name }}
+        owner: ${{ github.event.client_payload.repository.owner }}
+
+    - name: Output pull request
+      run: echo "Your PR is ${PR}"
+      if: success() && steps.findPr.outputs.number
+      env:
+        PR: ${{ steps.findPr.outputs.pr }}
+
+    - name: Post comments to GitHub
+      uses: b4b4r07/action-github-comment@v1
+      with:
+        repository: ${{ github.event.client_payload.repository.full_name }}
+        number: ${{ steps.findPr.outputs.pr }}
+        body: |
+          HI! 😜
+          @${{ github.event.client_payload.event.pusher.name }}
+          ${{ steps.findPr.outputs.pr }}
+          b4b4r07/action-github-comment@v1
+          text...
+      env:
+        GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        LOG: trace
+
+  peter-evans-commit-comment:
+    needs: [main]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create commit comment
+        uses: peter-evans/commit-comment@v1
+        with:
+          token:  ${{ secrets.GIT_TOKEN }}
+          repository: ${{ github.event.client_payload.repository.full_name }}
+          sha: ${{ github.event.client_payload.sha }}
+          body: |
+            Hi ${{ github.event.client_payload.event.pusher.name }}! 🐿️ 📖
+
+            This message is feedback global checklist linter!
+
+            <details><summary>⚠️ Your PR, have .checklist.yaml errors:  Click here to learn about workflows!</summary>
+            </br>
+            
+            ${{ steps.validate-checklist.outputs.errors }}
+
+            > ℹ️ To find out more about the checklist-as-code, take a look [here](https://www.notion.so/productquintoandar/Checklist-as-code-0772fe488ad645e49a2539836c0c2adf).
+
+            </details>

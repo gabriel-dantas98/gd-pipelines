@@ -1,0 +1,38 @@
+
+name: Github actions playground
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: SvanBoxel/organization-workflow@main
+      with:
+        id: ${{ github.event.client_payload.id }}
+        callback_url: ${{ github.event.client_payload.callback_url }}
+        sha: ${{ github.event.client_payload.sha }}
+        run_id: ${{ github.run_id }}
+        name: ${{ github.workflow }}
+        documentation: ".github/workflows/enforce-checklist-file.md"
+        ## Be careful!!! If you enable parameters bellow, it's not possible revert to false
+        ## Exists an bug reported here  https://github.com/SvanBoxel/organization-workflows/issues/24
+        enforce: false # <--- Enforce required status check. Default: false
+        enforce_admin: false # <--- Enforce required status check for admins. Default: false
+
+    - name: Checkout
+      uses: actions/checkout@v2.3.4
+      with:
+        repository: ${{ github.event.client_payload.repository.full_name }}
+        ref: ${{ github.event.client_payload.sha }}
+        token: ${{ github.event.client_payload.token }}
+    - name: Search for .checklist.yaml
+      run: |
+            env && ls
