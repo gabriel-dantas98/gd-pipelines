@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "claps-worker"
+spec:
+  type: website
+  lifecycle: experimental
+  owner: user:guest
