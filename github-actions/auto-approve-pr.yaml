@@ -1,0 +1,22 @@
+name: Auto approve
+on: pull_request_target
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: stepSRE
+        uses: hmarr/auto-approve-action@v2
+        if: github.actor == 'gabriel-dantas98'
+        with:
+          review-message: "This PR was created by **Gabriel Dantas** and it is **automatically** approved by the **CODEOWNER**. Now you only need the approval of another engineer and your resource is ready to be created."
+          github-token: ${{ secrets.PAT_BOT }}
+            
+      - name: stepSWE
+        uses: hmarr/auto-approve-action@v2
+        if: github.actor != 'gabriel-dantas98'
+        with:
+          review-message: "Since this PR was **NOT** created by **Gabriel Dantas**, it is necessary the  **approval** of the **CODEOWNER**. Only SREs can approve in this situation."
+          github-token: ${{ secrets.ANOTHER_PAT_BOT}}
