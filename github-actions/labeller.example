@@ -1,0 +1,11 @@
+terraform:
+  - aws/**/*
+  - gcp/**/*
+  - digital-ocean/**/*
+gitops:
+  - infra-as-code/**/*
+kubernetes:
+  - helm-chats/search/**/*
+  - k8s-resources/apps-*/**/*
+documentation:
+  - docs/**/*
